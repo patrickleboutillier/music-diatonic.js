@@ -1,0 +1,16 @@
+{
+  "name": "music-diatonic",
+  "version": "0.0.1",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "tap": ">=11",
+    "browserify": ">1"
+  },
+
+  "scripts": {
+    "test": "tap --coverage test/*.js",
+    "shrinkwrap": "browserify src/main.js -o music-diatonic.js"
+  }
+
+}
