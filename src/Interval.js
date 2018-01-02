@@ -2,23 +2,60 @@
 
 module.exports = class Interval {
 	constructor(str){
-		switch (str){
-			case "m2":
-				this.semitones = 1 ;
-				this.steps = 1 ;
-				break ;
-			case "M2":
-				this.semitones = 2 ;
-				this.steps = 1 ;
-				break ;
-			case "P5":
-				this.semitones = 7 ;
-				this.steps = 4 ;
-				break ;
-			default:
-				throw new Error("Unknown interval '" + str + "'") ;
+		var matches = str.match(/^([Ad]*)(([AdmM][2367])|([AdP][145]))$/) ;
+        if ((matches)&&(matches.length > 0)){
+			var pref = matches[1] ;
+			var core = matches[2] ;
+			var l = core.charAt(0) ;
+			var n = parseInt(core.substring(1)) ;
+
+			this.acc = 0 ;
+			if (l == "A"){
+				if ((n == 2)||(n == 3)||(n == 6)||(n == 7)){
+					l = "M" ;
+				}
+				else {
+					l = "P" ;
+				}
+				this.acc = pref.length + 1 ;
+			}
+			else if (l == "d"){
+				if ((n == 2)||(n == 3)||(n == 6)||(n == 7)){
+					l = "m" ;
+				}
+				else {
+					l = "P" ;
+				}
+				this.acc = -(pref.length + 1) ;
+			}
+
+			this.quality = l ;
+			this.steps = n - 1 ;
+			this.semitones = this._countSemitones(l + n) ;
 		}
-		this.name = str ;
+		else {
+			throw new Error("Unknown interval '" + str + "'") ;
+		}
+	}
+
+	_countSemitones(str){
+		switch (str){
+			case "P1": return 0 ;
+			case "m2": return 1 ;
+			case "M2": return 2 ;
+			case "m3": return 3 ;
+			case "M3": return 4 ;
+			case "P4": return 5 ;
+			case "P5": return 7 ;
+			case "m6": return 8 ;
+			case "M6": return 9 ;
+			case "m7": return 10 ;
+			case "M7": return 11 ;
+		}
+	}
+
+	toString(){
+		return this.getQuality() + (this.getSteps() + 1) ;
 	}
 
 	getSteps(){
@@ -26,7 +63,43 @@ module.exports = class Interval {
 	}
 
 	getSemitones(){
-		return this.semitones ;
+		return this.semitones + this.acc ;
+	}
+
+	getQuality(){
+		if (this.acc > 0){
+			return "A".repeat(this.acc) ;
+		}
+		else if (this.acc < 0){
+			return "d".repeat(-this.acc) ;
+		}
+		else {
+			return this.quality ;
+		}
+	}
+
+	augment(){
+		var ret = Object.assign(Object.create(Interval.prototype), this) ;
+		if ((ret.quality == "m")&&(ret.acc == 0)){
+			ret.quality = "M" ;
+			ret.semitones += 1 ;
+		}
+		else {
+			ret.acc++ ;
+		}
+		return ret ;
+	}
+
+	diminish(){
+		var ret = Object.assign(Object.create(Interval.prototype), this) ;
+		if ((ret.quality == "M")&&(ret.acc == 0)){
+			ret.quality = "m" ;
+			ret.semitones -= 1 ;
+		}
+		else {
+			ret.acc-- ;
+		}
+		return ret ;
 	}
 
 	above(n){
